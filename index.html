@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Meditation + Walk Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot"></span>
+        <h1>Daily Calm & Move</h1>
+      </div>
+      <div class="streaks">
+        <div class="streak">
+          <span class="label">Meditation Streak</span>
+          <span id="med-streak" class="value">0</span>
+        </div>
+        <div class="streak">
+          <span class="label">Walk Streak</span>
+          <span id="walk-streak" class="value">0</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-card">
+          <h2 id="today-date">Today</h2>
+          <p id="today-status">Make today count.</p>
+          <div class="cta-row">
+            <button id="btn-meditation" class="big-cta med">
+              I Meditated
+              <span class="sub">Tap to log</span>
+            </button>
+            <button id="btn-walk" class="big-cta walk">
+              I Walked
+              <span class="sub">Tap to log</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="calendar-wrap">
+        <div class="calendar-controls">
+          <button id="prev-month" class="nav-btn">◀</button>
+          <h3 id="month-label">Month</h3>
+          <button id="next-month" class="nav-btn">▶</button>
+        </div>
+        <div class="legend">
+          <span><i class="dot dot-med"></i>Meditation</span>
+          <span><i class="dot dot-walk"></i>Walk</span>
+          <span><i class="dot dot-both"></i>Both</span>
+        </div>
+        <div id="calendar" class="calendar"></div>
+      </section>
+
+      <section class="stats">
+        <div class="stat-card">
+          <h4>Meditation</h4>
+          <div class="numbers">
+            <div>
+              <span class="small">This month</span>
+              <span id="med-month" class="big">0</span>
+            </div>
+            <div>
+              <span class="small">All time days</span>
+              <span id="med-total" class="big">0</span>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <h4>Walk</h4>
+          <div class="numbers">
+            <div>
+              <span class="small">This month</span>
+              <span id="walk-month" class="big">0</span>
+            </div>
+            <div>
+              <span class="small">All time days</span>
+              <span id="walk-total" class="big">0</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="controls">
+        <button id="reset-day" class="ghost">Reset today</button>
+        <button id="export-data" class="ghost">Export data (JSON)</button>
+        <button id="import-data" class="ghost">Import data (JSON)</button>
+        <input id="import-file" type="file" accept="application/json" hidden />
+      </section>
+    </main>
+
+    <footer>
+      <p>Built for gentle consistency. Your data is stored locally in this browser.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
