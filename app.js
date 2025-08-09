@@ -8,9 +8,11 @@ const state = {
   data: loadData()
 };
 
+let deferredPrompt = null;
+
 function loadData() {
   try {
-    const raw = localStorage.getItem('dw-data'); // localStorage persists across sessions[7][10][16][13]
+    const raw = localStorage.getItem('dw-data');
     if (!raw) return { entries: {} };
     const parsed = JSON.parse(raw);
     return parsed?.entries ? parsed : { entries: {} };
@@ -32,12 +34,21 @@ function ymd(dateObj) {
 function setToday(type) {
   const today = ymd(new Date());
   const entry = state.data.entries[today] ?? { med:false, walk:false };
+  const before = { ...entry };
   if (type === 'med') entry.med = true;
   if (type === 'walk') entry.walk = true;
+
   state.data.entries[today] = entry;
   saveData();
   renderAll();
   flashButton(type);
+
+  const nowBoth = entry.med && entry.walk;
+  const wasBoth = before.med && before.walk;
+  if (!wasBoth && nowBoth) celebrate();
+
+  maybeShowMilestone(type);
+  pulseStatus();
 }
 
 function resetToday() {
@@ -58,7 +69,6 @@ function renderCalendar() {
   const y = state.year, m = state.month;
   el('month-label').textContent = monthLabel(y, m);
 
-  // Weekday headers (Mon-Sun)
   const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   weekdays.forEach(w => {
     const wEl = document.createElement('div');
@@ -68,16 +78,14 @@ function renderCalendar() {
   });
 
   const first = new Date(y, m, 1);
-  const startIdx = (first.getDay() + 6) % 7; // make Monday=0
+  const startIdx = (first.getDay() + 6) % 7; // Monday=0
   const daysInMonth = new Date(y, m+1, 0).getDate();
+  const todayStr = ymd(new Date());
 
-  // leading blanks
   for (let i=0;i<startIdx;i++){
     const blank = document.createElement('div');
     cal.appendChild(blank);
   }
-
-  const todayStr = ymd(new Date());
 
   for (let d=1; d<=daysInMonth; d++){
     const date = new Date(y, m, d);
@@ -95,11 +103,13 @@ function renderCalendar() {
     const badges = document.createElement('div');
     badges.className = 'badges';
 
+    // Heat tint + badges
     if (entry?.med && entry?.walk) {
-      const b = document.createElement('span'); b.className = 'badge both'; badges.appendChild(b);
+      cell.classList.add('heat-both');
+      const b = document.createElement('span'); b.className = 'badge both added'; badges.appendChild(b);
     } else {
-      if (entry?.med) { const b = document.createElement('span'); b.className = 'badge med'; badges.appendChild(b); }
-      if (entry?.walk) { const b = document.createElement('span'); b.className = 'badge walk'; badges.appendChild(b); }
+      if (entry?.med) { cell.classList.add('heat-med'); const b = document.createElement('span'); b.className = 'badge med added'; badges.appendChild(b); }
+      if (entry?.walk) { cell.classList.add('heat-walk'); const b = document.createElement('span'); b.className = 'badge walk added'; badges.appendChild(b); }
     }
 
     cell.appendChild(num);
@@ -129,7 +139,6 @@ function getStats() {
 }
 
 function getStreak(type) {
-  // Count consecutive days ending today where type is true
   let streak = 0;
   const cur = new Date();
   for (;;) {
@@ -155,11 +164,22 @@ function renderToday() {
   if (medDone && walkDone) parts.push('Meditation and Walk complete. Beautiful work.');
   else if (medDone) parts.push('Meditation done. A walk would be great.');
   else if (walkDone) parts.push('Walk done. A short meditation will feel good.');
-  else parts.push('Make today count.');
+  else parts.push(dynamicPrompt());
 
   el('today-status').textContent = parts.join(' ');
-  el('btn-meditation').classList.toggle('completed', medDone);
-  el('btn-walk').classList.toggle('completed', walkDone);
+  const medBtn = el('btn-meditation');
+  const walkBtn = el('btn-walk');
+  medBtn.classList.toggle('completed', medDone);
+  walkBtn.classList.toggle('completed', walkDone);
+  medBtn.setAttribute('aria-pressed', String(medDone));
+  walkBtn.setAttribute('aria-pressed', String(walkDone));
+}
+
+function dynamicPrompt(){
+  const hr = new Date().getHours();
+  if (hr < 12) return 'Morning boost: a calm minute, then a walk.';
+  if (hr < 18) return 'Midday nudge: a short meditation or a brisk walk.';
+  return 'Evening wind-down: breathe, then take a gentle stroll.';
 }
 
 function renderStats() {
@@ -179,6 +199,37 @@ function flashButton(type){
     [{ transform:'scale(1)' }, { transform:'scale(1.04)' }, { transform:'scale(1)' }],
     { duration:260, easing:'ease-out' }
   );
+}
+
+function pulseStatus(){
+  const dot = document.getElementById('status-icon');
+  dot.classList.add('status-glow');
+  setTimeout(()=>dot.classList.remove('status-glow'), 600);
+}
+
+function celebrate() {
+  if (window.confetti) {
+    confetti({
+      particleCount: 140,
+      spread: 70,
+      startVelocity: 45,
+      origin: { x: 0.5, y: 0.2 },
+      colors: ['#7c3aed','#10b981','#f59e0b','#22d3ee','#60a5fa']
+    });
+  }
+}
+
+function maybeShowMilestone(type){
+  const streak = getStreak(type);
+  const thresholds = [7, 30, 100];
+  if (thresholds.includes(streak)) {
+    const box = el('milestone');
+    const label = type === 'med' ? 'Meditation' : 'Walk';
+    box.textContent = `${label} streak: ${streak} days! Keep the rhythm.`;
+    box.style.display = 'block';
+    setTimeout(()=> box.style.display='none', 3500);
+    celebrate();
+  }
 }
 
 function renderAll(){
@@ -238,11 +289,36 @@ function attachEvents(){
     if (file) importData(file);
     e.target.value = '';
   });
+
+  // PWA install prompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const btn = el('install-btn');
+    btn.style.display = 'inline-flex';
+    btn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      btn.style.display = 'none';
+    }, { once:true });
+  });
+}
+
+function registerSW(){
+  if ('serviceWorker' in navigator) {
+    // For GitHub Pages subpath deployments, relative path works:
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
 }
 
 function init(){
   el('today-date').textContent = new Date().toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long' });
   attachEvents();
   renderAll();
+  registerSW();
 }
 document.addEventListener('DOMContentLoaded', init);
+
+// End of app.js

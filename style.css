@@ -14,16 +14,26 @@ html,body{height:100%}
 body{
   margin:0;
   font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Arial;
-  background: radial-gradient(1200px 600px at 70% -10%, #152047, transparent 60%), var(--bg);
+  background:
+    radial-gradient(1200px 600px at 70% -10%, #152047, transparent 60%),
+    radial-gradient(900px 500px at 0% 100%, #0b1940, transparent 60%),
+    var(--bg);
   color:var(--text);
   -webkit-font-smoothing:antialiased;
 }
-#app{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+#app{max-width:980px;margin:0 auto;padding:20px 16px 80px}
+
+/* Glass panels */
+.glass{
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+}
 
 .topbar{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,var(--panel),var(--panel-2));
-  border:1px solid rgba(255,255,255,0.06); position:sticky; top:10px; z-index:10; backdrop-filter: blur(6px);
+  padding:12px 14px;border-radius:14px; position:sticky; top:10px; z-index:10;
 }
 .brand{display:flex;align-items:center;gap:10px}
 .brand .dot{width:10px;height:10px;border-radius:50%;background:conic-gradient(from 180deg,var(--med),var(--walk))}
@@ -36,38 +46,45 @@ body{
 
 .hero{margin:20px 0}
 .hero-card{
-  background:linear-gradient(180deg,var(--panel),#0f1838);
-  border:1px solid rgba(255,255,255,0.06);
   border-radius:18px;padding:24px;
   box-shadow:0 20px 50px rgba(0,0,0,0.35);
 }
-.hero-card h2{margin:0 0 6px 0;font-size:22px}
-.hero-card p{margin:0 0 18px 0;color:var(--muted)}
+.hero-card h2{margin:0 0 8px 0;font-size:22px}
+.status-row{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+#status-icon{width:18px;height:18px;border-radius:50%;box-shadow:0 0 0 0 rgba(34,211,238,0);transition:box-shadow .3s ease}
+.status-glow{box-shadow:0 0 0 10px rgba(34,211,238,0.12)}
+.hero-card p{margin:0;color:var(--muted)}
 
-.cta-row{display:flex;gap:12px;flex-wrap:wrap}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
 .big-cta{
   flex:1 1 260px; min-height:86px;
   border:none;border-radius:14px;cursor:pointer; padding:16px 18px;text-align:left;
   color:white; font-size:22px; font-weight:800; position:relative; overflow:hidden;
-  transition:transform .06s ease, box-shadow .2s ease;
+  transition:transform .06s ease, box-shadow .2s ease, opacity .2s ease;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.30), inset 0 0 0 rgba(255,255,255,0);
 }
-.big-cta .sub{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,0.8)}
-.big-cta:hover{transform:translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,0.25)}
-.big-cta:active{transform:translateY(0)}
+.big-cta .sub{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,0.85)}
+.big-cta:hover{transform:translateY(-2px); box-shadow:0 14px 28px rgba(0,0,0,0.32)}
+.big-cta:active{box-shadow:0 6px 16px rgba(0,0,0,0.35), inset 0 0 12px rgba(255,255,255,0.12)}
 .big-cta.med{background:linear-gradient(135deg,#6d28d9,var(--med))}
 .big-cta.walk{background:linear-gradient(135deg,#059669,var(--walk))}
+.big-cta.completed{opacity:0.92; filter:saturate(115%)}
+
+.milestone{
+  margin-top:12px; font-weight:700; color:#facc15; display:none;
+}
 
 .calendar-wrap{
   margin:26px 0 10px 0; padding:18px; border-radius:18px;
-  background:linear-gradient(180deg,var(--panel),var(--panel-2));
-  border:1px solid rgba(255,255,255,0.06);
 }
 .calendar-controls{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px}
 .calendar-controls h3{margin:0;font-size:18px}
 .nav-btn{
-  background:#0b1021;border:1px solid rgba(255,255,255,0.06); color:#cbd5e1;
-  padding:8px 10px;border-radius:10px;cursor:pointer
+  background:#0b1021;border:1px solid rgba(255,255,255,0.08); color:#cbd5e1;
+  padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .15s ease, transform .1s ease
 }
+.nav-btn:hover{background:#0d1327; transform:translateY(-1px)}
+
 .legend{display:flex;gap:16px;justify-content:center;color:var(--muted);font-size:12px;margin:6px 0 14px}
 .legend .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
 .dot-med{background:var(--med)}
@@ -77,24 +94,30 @@ body{
 .calendar{
   display:grid;grid-template-columns:repeat(7,1fr); gap:8px;
 }
+.weekday{font-size:11px;color:#94a3b8;text-align:center;margin-bottom:6px}
 .day{
   aspect-ratio:1 / 1; border-radius:12px; padding:8px;
   background:#0b1021; border:1px solid rgba(255,255,255,0.06); position:relative; overflow:hidden;
+  transition: transform .12s ease, box-shadow .16s ease, background .2s ease;
 }
+.day:hover{ transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.28); }
 .day .dnum{font-size:12px;color:#94a3b8}
 .day .badges{position:absolute; right:6px; bottom:6px; display:flex; gap:6px}
-.badge{width:10px;height:10px;border-radius:50%}
+.badge{width:10px;height:10px;border-radius:50%; transform: scale(0.9); transition: transform .14s ease}
+.badge.added{ transform: scale(1.2); }
 .badge.med{background:var(--med)}
 .badge.walk{background:var(--walk)}
 .badge.both{background:var(--both)}
 .day.today{outline:2px solid var(--accent); outline-offset:0}
 
-.weekday{font-size:11px;color:#94a3b8;text-align:center;margin-bottom:6px}
+/* Heat tint for quick glance */
+.day.heat-med{ background: linear-gradient(180deg, rgba(124,58,237,0.11), transparent 40%), #0b1021; }
+.day.heat-walk{ background: linear-gradient(180deg, rgba(16,185,129,0.11), transparent 40%), #0b1021; }
+.day.heat-both{ background: linear-gradient(180deg, rgba(245,158,11,0.12), transparent 40%), #0b1021; }
 
 .stats{display:grid;grid-template-columns:repeat(2,1fr); gap:12px}
 .stat-card{
-  background:linear-gradient(180deg,var(--panel),var(--panel-2));
-  border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:16px;
+  border-radius:16px; padding:16px;
 }
 .stat-card h4{margin:0 0 12px 0}
 .numbers{display:flex;justify-content:space-between}
@@ -104,8 +127,9 @@ body{
 .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 .ghost{
   background:transparent;color:#cbd5e1;border:1px solid rgba(255,255,255,0.15);
-  border-radius:12px;padding:10px 14px;cursor:pointer
+  border-radius:12px;padding:10px 14px;cursor:pointer;transition:background .15s ease, transform .1s ease
 }
+.ghost:hover{background:rgba(255,255,255,0.04); transform:translateY(-1px)}
 
 footer{margin-top:22px;color:var(--muted);text-align:center;font-size:12px}
 
