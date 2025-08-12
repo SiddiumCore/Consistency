@@ -49,7 +49,10 @@ function setToday(type) {
   flashButton(type);
   pulseStatus();
 
-  if (!wasAll && nowAll) triggerConfettiCSS();
+  // Always trigger confetti when all three are completed, regardless of previous state
+  if (nowAll) {
+    triggerConfettiCSS();
+  }
 
   maybeShowMilestone(type);
 }

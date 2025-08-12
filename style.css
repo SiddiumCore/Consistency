@@ -193,6 +193,14 @@ footer{margin-top:22px;color:var(--muted);text-align:center;font-size:12px}
   .stats{grid-template-columns:1fr}
 }
 
+/* Mobile calendar badge sizing */
+@media (max-width:480px){
+  .day{padding:4px 4px 2px 4px}
+  .day .dnum{font-size:11px}
+  .day .badges{right:3px;bottom:3px;gap:3px}
+  .badge{width:7px;height:7px}
+}
+
 /* CSS-ONLY PREMIUM CONFETTI */
 .confetti-layer{
   position: fixed;
