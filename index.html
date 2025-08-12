@@ -24,6 +24,10 @@
           <span class="label">Walk Streak</span>
           <span id="walk-streak" class="value">0</span>
         </div>
+        <div class="streak">
+          <span class="label">Vitamin Streak</span>
+          <span id="vit-streak" class="value">0</span>
+        </div>
       </div>
     </header>
 
@@ -44,6 +48,10 @@
               I Walked
               <span class="sub">Tap to log</span>
             </button>
+            <button id="btn-vitamin" class="big-cta vitamin" aria-pressed="false">
+              I Took Vitamin
+              <span class="sub">Tap to log</span>
+            </button>
           </div>
           <div class="milestone" id="milestone" role="status" aria-live="polite"></div>
         </div>
@@ -58,7 +66,7 @@
         <div class="legend">
           <span><i class="dot dot-med"></i>Meditation</span>
           <span><i class="dot dot-walk"></i>Walk</span>
-          <span><i class="dot dot-both"></i>Both</span>
+          <span><i class="dot dot-vit"></i>Vitamin</span>
         </div>
         <div id="calendar" class="calendar" aria-label="Monthly calendar"></div>
       </section>
@@ -90,6 +98,19 @@
             </div>
           </div>
         </div>
+        <div class="stat-card glass">
+          <h4>Vitamin</h4>
+          <div class="numbers">
+            <div>
+              <span class="small">This month</span>
+              <span id="vit-month" class="big">0</span>
+            </div>
+            <div>
+              <span class="small">All time days</span>
+              <span id="vit-total" class="big">0</span>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section class="controls">
@@ -102,11 +123,25 @@
     </main>
 
     <footer>
-      <p>Your data is stored locally in this browser. Enable sync later via GitHub API if you want cross-device.</p>
+      <p>Your data is stored locally in this browser.</p>
     </footer>
   </div>
 
-  <script src="https://unpkg.com/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <!-- CSS-only confetti layer -->
+  <div class="confetti-layer" aria-hidden="true">
+    <!-- 50 particles -->
+    <div class="confetti c1"></div><div class="confetti c2"></div><div class="confetti c3"></div><div class="confetti c4"></div><div class="confetti c5"></div>
+    <div class="confetti c6"></div><div class="confetti c7"></div><div class="confetti c8"></div><div class="confetti c9"></div><div class="confetti c10"></div>
+    <div class="confetti c11"></div><div class="confetti c12"></div><div class="confetti c13"></div><div class="confetti c14"></div><div class="confetti c15"></div>
+    <div class="confetti c16"></div><div class="confetti c17"></div><div class="confetti c18"></div><div class="confetti c19"></div><div class="confetti c20"></div>
+    <div class="confetti c21"></div><div class="confetti c22"></div><div class="confetti c23"></div><div class="confetti c24"></div><div class="confetti c25"></div>
+    <div class="confetti c26"></div><div class="confetti c27"></div><div class="confetti c28"></div><div class="confetti c29"></div><div class="confetti c30"></div>
+    <div class="confetti c31"></div><div class="confetti c32"></div><div class="confetti c33"></div><div class="confetti c34"></div><div class="confetti c35"></div>
+    <div class="confetti c36"></div><div class="confetti c37"></div><div class="confetti c38"></div><div class="confetti c39"></div><div class="confetti c40"></div>
+    <div class="confetti c41"></div><div class="confetti c42"></div><div class="confetti c43"></div><div class="confetti c44"></div><div class="confetti c45"></div>
+    <div class="confetti c46"></div><div class="confetti c47"></div><div class="confetti c48"></div><div class="confetti c49"></div><div class="confetti c50"></div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
