@@ -6,7 +6,319 @@
   <title>Daily Calm & Move</title>
   <meta name="theme-color" content="#0f172a" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    :root{
+      --bg:#0b1021;
+      --panel:#0f172a;
+      --panel-2:#121a33;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+
+      /* Habit colors */
+      --med:#f59e0b;  /* meditation: orange */
+      --walk:#10b981; /* walk: green */
+
+      --accent:#22d3ee;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Arial;
+      background:
+        radial-gradient(1200px 600px at 70% -10%, #152047, transparent 60%),
+        radial-gradient(900px 500px at 0% 100%, #0b1940, transparent 60%),
+        var(--bg);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+    }
+    #app{max-width:980px;margin:0 auto;padding:20px 16px 80px}
+
+    /* Glass panels */
+    .glass{
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px) saturate(120%);
+      -webkit-backdrop-filter: blur(12px) saturate(120%);
+    }
+
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:12px 14px;border-radius:14px; position:sticky; top:10px; z-index:10;
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand .dot{width:10px;height:10px;border-radius:50%;
+      background:conic-gradient(from 180deg,var(--med),var(--walk))}
+    .brand h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
+
+    .streaks{display:flex;gap:16px;flex-wrap:wrap}
+    .streak{display:flex;flex-direction:column;gap:2px}
+    .streak .label{font-size:12px;color:var(--muted)}
+    .streak .value{font-size:20px;font-weight:800;background:linear-gradient(90deg,var(--accent),#8b5cf6);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+    .hero{margin:20px 0}
+    .hero-card{
+      border-radius:18px;padding:24px;
+      box-shadow:0 20px 50px rgba(0,0,0,0.35);
+    }
+    .hero-card h2{margin:0 0 8px 0;font-size:22px}
+    .status-row{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+    #status-icon{width:18px;height:18px;border-radius:50%;box-shadow:0 0 0 0 rgba(34,211,238,0);transition:box-shadow .3s ease}
+    .status-glow{box-shadow:0 0 0 10px rgba(34,211,238,0.12)}
+    .hero-card p{margin:0;color:var(--muted)}
+
+    .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+    .big-cta{
+      flex:1 1 260px; min-height:86px;
+      border:none;border-radius:14px;cursor:pointer; padding:16px 18px;text-align:left;
+      color:white; font-size:22px; font-weight:800; position:relative; overflow:hidden;
+      transition:transform .06s ease, box-shadow .2s ease, opacity .2s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.30), inset 0 0 0 rgba(255,255,255,0);
+    }
+    .big-cta .sub{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,0.85)}
+    .big-cta:hover{transform:translateY(-2px); box-shadow:0 14px 28px rgba(0,0,0,0.32)}
+    .big-cta:active{box-shadow:0 6px 16px rgba(0,0,0,0.35), inset 0 0 12px rgba(255,255,255,0.12)}
+    .big-cta.med{background:linear-gradient(135deg,#fb923c,var(--med))}
+    .big-cta.walk{background:linear-gradient(135deg,#059669,var(--walk))}
+    .big-cta.completed{opacity:0.92; filter:saturate(115%)}
+
+    .milestone{
+      margin-top:12px; font-weight:700; color:#facc15; display:none;
+    }
+
+    .calendar-wrap{
+      margin:26px 0 10px 0; padding:18px; border-radius:18px;
+    }
+    .calendar-controls{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px}
+    .calendar-controls h3{margin:0;font-size:18px}
+    .nav-btn{
+      background:#0b1021;border:1px solid rgba(255,255,255,0.08); color:#cbd5e1;
+      padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .15s ease, transform .1s ease
+    }
+    .nav-btn:hover{background:#0d1327; transform:translateY(-1px)}
+
+    .legend{display:flex;gap:16px;justify-content:center;color:var(--muted);font-size:12px;margin:6px 0 14px}
+    .legend .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+    .dot-med{background:var(--med)}
+    .dot-walk{background:var(--walk)}
+
+    .calendar{
+      display:grid;grid-template-columns:repeat(7,1fr); gap:8px;
+    }
+    .weekday{font-size:11px;color:#94a3b8;text-align:center;margin-bottom:6px}
+
+    @keyframes shimmer {
+      0% { transform: translateX(-30%); opacity: .6; }
+      50% { opacity: .9; }
+      100% { transform: translateX(30%); opacity: .6; }
+    }
+    .day{
+      aspect-ratio:1 / 1; border-radius:12px; padding:8px 8px 6px 8px;
+      background:#0b1021; border:1px solid rgba(255,255,255,0.06); position:relative; overflow:hidden;
+      transition: transform .12s ease, box-shadow .16s ease, background .2s ease;
+      isolation:isolate; cursor: pointer;
+    }
+    .day:hover{ transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.28); }
+    .day .dnum{font-size:12px;color:#94a3b8}
+
+    .day.tint-med::before,
+    .day.tint-walk::before,
+    .day.tint-mix::before{
+      content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+      background: transparent;
+      opacity: 0.22;
+    }
+    .day.tint-med::before{
+      background:
+        linear-gradient(180deg, rgba(245,158,11,0.18), transparent 45%),
+        radial-gradient(40% 20% at 20% 0%, rgba(245,158,11,0.18), transparent 70%);
+    }
+    .day.tint-walk::before{
+      background:
+        linear-gradient(180deg, rgba(16,185,129,0.18), transparent 45%),
+        radial-gradient(40% 20% at 20% 0%, rgba(16,185,129,0.18), transparent 70%);
+    }
+    .day.tint-mix::before{
+      background:
+        linear-gradient(180deg, rgba(245,158,11,0.16), transparent 50%),
+        linear-gradient(180deg, rgba(16,185,129,0.16), transparent 55%);
+    }
+    .day.tint-animated::after{
+      content:""; position:absolute; inset:-10% -40%; height:120%; width:60%;
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.06), rgba(255,255,255,0));
+      transform: rotate(25deg);
+      animation: shimmer 3.6s ease-in-out infinite;
+      mix-blend-mode: overlay;
+      z-index:-1;
+    }
+
+    .day .badges{
+      position:absolute; right:6px; bottom:6px;
+      display:flex; flex-direction:column; gap:5px; align-items:flex-end;
+    }
+    .badge{width:10px;height:10px;border-radius:50%;}
+    .badge.med{background:var(--med)}
+    .badge.walk{background:var(--walk)}
+    .day.today{outline:2px solid var(--accent); outline-offset:0}
+
+    /* Stats */
+    .stats{display:grid;grid-template-columns:repeat(2,1fr); gap:12px; margin-top: 20px;}
+    .stat-card{
+      border-radius:16px; padding:16px;
+    }
+    .stat-card h4{margin:0 0 12px 0}
+    .numbers{display:flex;justify-content:space-between}
+    .small{font-size:12px;color:var(--muted)}
+    .big{font-size:24px;font-weight:800}
+
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .ghost{
+      background:transparent;color:#cbd5e1;border:1px solid rgba(255,255,255,0.15);
+      border-radius:12px;padding:10px 14px;cursor:pointer;transition:background .15s ease, transform .1s ease
+    }
+    .ghost:hover{background:rgba(255,255,255,0.04); transform:translateY(-1px)}
+
+    footer{margin-top:22px;color:var(--muted);text-align:center;font-size:12px}
+    
+    /* Modals */
+    .modal-overlay {
+        position: fixed; inset: 0;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 1000;
+        opacity: 0; visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .modal-overlay.visible {
+        opacity: 1; visibility: visible;
+    }
+    .modal-content {
+        padding: 24px; border-radius: 18px;
+        width: 90%; max-width: 400px;
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+        text-align: center;
+    }
+    .modal-overlay.visible .modal-content {
+        transform: scale(1);
+    }
+    .modal-content h3 { margin: 0 0 16px; }
+    .modal-close-btn {
+        position: absolute; top: 12px; right: 12px;
+        background: none; border: none; font-size: 24px; color: var(--muted);
+        cursor: pointer;
+    }
+    #timer-display {
+        font-size: 48px; font-weight: 700;
+        letter-spacing: 2px;
+        margin: 20px 0;
+    }
+    .timer-controls {
+        display: flex; gap: 12px; justify-content: center;
+    }
+    .timer-btn {
+        padding: 12px 20px; border-radius: 12px;
+        border: none; font-weight: 600; cursor: pointer;
+        min-width: 120px;
+    }
+    .timer-btn.primary { background: var(--accent); color: var(--bg); }
+    .timer-btn.secondary { background: var(--panel-2); color: var(--text); }
+    #day-details-content { text-align: left; font-size: 16px; line-height: 1.8; }
+
+
+    @media (max-width:900px){
+      .stats{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:700px){
+      .streaks{display:none}
+      .stats{grid-template-columns:1fr}
+    }
+    @media (max-width:480px){
+      .day{padding:4px 4px 2px 4px}
+      .day .dnum{font-size:11px}
+      .day .badges{right:3px;bottom:3px;gap:3px}
+      .badge{width:7px;height:7px}
+    }
+
+    /* CSS-ONLY PREMIUM CONFETTI */
+    .confetti-layer{
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0;
+    }
+    .confetti-layer.active{ opacity: 1; }
+    .confetti{
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      width: 10px;
+      height: 18px;
+      opacity: 0;
+      transform-origin: center;
+      border-radius: 2px;
+    }
+    .c1,.c6,.c11,.c16,.c21,.c26,.c31,.c36,.c41,.c46 { background: #f59e0b; }
+    .c2,.c7,.c12,.c17,.c22,.c27,.c32,.c37,.c42,.c47 { background: #10b981; }
+    .c3,.c8,.c13,.c18,.c23,.c28,.c33,.c38,.c43,.c48 { background: #ffffff; }
+    .c4,.c9,.c14,.c19,.c24,.c29,.c34,.c39,.c44,.c49 { background: #93c5fd; }
+    .c5,.c10,.c15,.c20,.c25,.c30,.c35,.c40,.c45,.c50 { background: #22d3ee; }
+    @keyframes fallSpin {
+      0% { transform: translate(var(--x,0), -20px) rotate(0deg); opacity: 1; }
+      70% { opacity: 1; }
+      100% { transform: translate(var(--xEnd,0), 110vh) rotate(var(--rot,720deg)); opacity: 0; }
+    }
+    @keyframes drift {
+      0% { transform: translateX(0); } 50% { transform: translateX(12px); } 100% { transform: translateX(0); }
+    }
+    .confetti{
+      animation: fallSpin var(--dur,1800ms) cubic-bezier(.2,.7,.2,1) forwards,
+                drift 1800ms ease-in-out infinite;
+      animation-delay: var(--delay,0ms);
+    }
+    .c1{ --x:-45vw; --xEnd:-40vw; --rot:680deg; --dur:1700ms; --delay:0ms; }
+    .c2{ --x:-35vw; --xEnd:-30vw; --rot:720deg; --dur:1650ms; --delay:40ms; }
+    .c3{ --x:-25vw; --xEnd:-20vw; --rot:760deg; --dur:1600ms; --delay:80ms; }
+    .c4{ --x:-15vw; --xEnd:-10vw; --rot:800deg; --dur:1750ms; --delay:120ms; }
+    .c5{ --x:-5vw;  --xEnd:-2vw;  --rot:820deg; --dur:1680ms; --delay:160ms; }
+    .c6{ --x:5vw;   --xEnd:2vw;   --rot:700deg; --dur:1660ms; --delay:100ms; }
+    .c7{ --x:15vw;  --xEnd:10vw;  --rot:740deg; --dur:1720ms; --delay:140ms; }
+    .c8{ --x:25vw;  --xEnd:20vw;  --rot:760deg; --dur:1640ms; --delay:180ms; }
+    .c9{ --x:35vw;  --xEnd:30vw;  --rot:800deg; --dur:1760ms; --delay:220ms; }
+    .c10{--x:45vw;  --xEnd:40vw;  --rot:840deg; --dur:1700ms; --delay:260ms; }
+    .c11{ --x:-42vw; --xEnd:-39vw; --rot:690deg; --dur:1680ms; --delay:60ms; }
+    .c12{ --x:-32vw; --xEnd:-28vw; --rot:730deg; --dur:1580ms; --delay:100ms; }
+    .c13{ --x:-22vw; --xEnd:-18vw; --rot:770deg; --dur:1650ms; --delay:140ms; }
+    .c14{ --x:-12vw; --xEnd:-9vw;  --rot:810deg; --dur:1620ms; --delay:180ms; }
+    .c15{ --x:-2vw;  --xEnd:-1vw;  --rot:850deg; --dur:1550ms; --delay:220ms; }
+    .c16{ --x:8vw;   --xEnd:6vw;   --rot:710deg; --dur:1600ms; --delay:260ms; }
+    .c17{ --x:18vw;  --xEnd:14vw;  --rot:750deg; --dur:1700ms; --delay:300ms; }
+    .c18{ --x:28vw;  --xEnd:24vw;  --rot:790deg; --dur:1620ms; --delay:340ms; }
+    .c19{ --x:38vw;  --xEnd:34vw;  --rot:830deg; --dur:1680ms; --delay:380ms; }
+    .c20{ --x:48vw;  --xEnd:44vw;  --rot:870deg; --dur:1600ms; --delay:420ms; }
+    .c21{ --x:-48vw; --xEnd:-46vw; --rot:900deg; --dur:1850ms; --delay:0ms; }
+    .c22{ --x:-28vw; --xEnd:-24vw; --rot:880deg; --dur:1900ms; --delay:80ms; }
+    .c23{ --x:-8vw;  --xEnd:-6vw;  --rot:920deg; --dur:1950ms; --delay:160ms; }
+    .c24{ --x:12vw;  --xEnd:9vw;   --rot:900deg; --dur:1880ms; --delay:240ms; }
+    .c25{ --x:32vw;  --xEnd:29vw;  --rot:940deg; --dur:1980ms; --delay:320ms; }
+    .c26{ --x:42vw;  --xEnd:40vw;  --rot:980deg; --dur:1920ms; --delay:400ms; }
+    .c27{ --x:-38vw; --xEnd:-36vw; --rot:950deg; --dur:1860ms; --delay:200ms; }
+    .c28{ --x:-18vw; --xEnd:-15vw; --rot:990deg; --dur:1920ms; --delay:280ms; }
+    .c29{ --x:2vw;   --xEnd:0vw;   --rot:970deg; --dur:2000ms; --delay:360ms; }
+    .c30{ --x:22vw;  --xEnd:19vw;  --rot:1010deg;--dur:1940ms; --delay:440ms; }
+    .c31{ --x:-44vw; --xEnd:-40vw; --rot:860deg; --dur:1680ms; --delay:60ms; }
+    .c32{ --x:-26vw; --xEnd:-22vw; --rot:900deg; --dur:1740ms; --delay:120ms; }
+    .c33{ --x:-6vw;  --xEnd:-4vw;  --rot:940deg; --dur:1800ms; --delay:180ms; }
+    .c34{ --x:14vw;  --xEnd:12vw;  --rot:980deg; --dur:1760ms; --delay:240ms; }
+    .c35{ --x:34vw;  --xEnd:30vw;  --rot:1020deg;--dur:1820ms; --delay:300ms; }
+    .c36{ --x:44vw;  --xEnd:42vw;  --rot:1060deg;--dur:1880ms; --delay:360ms; }
+    .c37{ --x:-34vw; --xEnd:-30vw; --rot:880deg; --dur:1700ms; --delay:90ms; }
+    .c38{ --x:-16vw; --xEnd:-12vw; --rot:920deg; --dur:1760ms; --delay:150ms; }
+    .c39{ --x:4vw;   --xEnd:2vw;   --rot:960deg; --dur:1820ms; --delay:210ms; }
+    .c40{ --x:24vw;  --xEnd:22vw;  --rot:1000deg;--dur:1880ms; --delay:270ms; }
+  </style>
 </head>
 <body>
   <div id="app">
@@ -24,10 +336,6 @@
           <span class="label">Walk Streak</span>
           <span id="walk-streak" class="value">0</span>
         </div>
-        <div class="streak">
-          <span class="label">Vitamin Streak</span>
-          <span id="vit-streak" class="value">0</span>
-        </div>
       </div>
     </header>
 
@@ -41,16 +349,12 @@
           </div>
           <div class="cta-row">
             <button id="btn-meditation" class="big-cta med" aria-pressed="false">
-              I Meditated
-              <span class="sub">Tap to log</span>
+              Start Meditation
+              <span class="sub">Tap to log time</span>
             </button>
             <button id="btn-walk" class="big-cta walk" aria-pressed="false">
-              I Walked
-              <span class="sub">Tap to log</span>
-            </button>
-            <button id="btn-vitamin" class="big-cta vitamin" aria-pressed="false">
-              I Took Vitamin
-              <span class="sub">Tap to log</span>
+              Start Walk
+              <span class="sub">Tap to log time</span>
             </button>
           </div>
           <div class="milestone" id="milestone" role="status" aria-live="polite"></div>
@@ -66,7 +370,6 @@
         <div class="legend">
           <span><i class="dot dot-med"></i>Meditation</span>
           <span><i class="dot dot-walk"></i>Walk</span>
-          <span><i class="dot dot-vit"></i>Vitamin</span>
         </div>
         <div id="calendar" class="calendar" aria-label="Monthly calendar"></div>
       </section>
@@ -98,19 +401,6 @@
             </div>
           </div>
         </div>
-        <div class="stat-card glass">
-          <h4>Vitamin</h4>
-          <div class="numbers">
-            <div>
-              <span class="small">This month</span>
-              <span id="vit-month" class="big">0</span>
-            </div>
-            <div>
-              <span class="small">All time days</span>
-              <span id="vit-total" class="big">0</span>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section class="controls">
@@ -118,7 +408,6 @@
         <button id="export-data" class="ghost">Export data (JSON)</button>
         <button id="import-data" class="ghost">Import data (JSON)</button>
         <input id="import-file" type="file" accept="application/json" hidden />
-        <button id="install-btn" class="ghost" style="display:none">Install App</button>
       </section>
     </main>
 
@@ -127,9 +416,30 @@
     </footer>
   </div>
 
+  <!-- Timer Modal -->
+  <div id="timer-modal" class="modal-overlay">
+    <div class="modal-content glass">
+      <button id="timer-modal-close" class="modal-close-btn">&times;</button>
+      <h3 id="timer-modal-title">Timer</h3>
+      <div id="timer-display">00:00</div>
+      <div class="timer-controls">
+        <button id="timer-start-pause" class="timer-btn primary">Start</button>
+        <button id="timer-finish" class="timer-btn secondary">Finish & Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day Details Modal -->
+  <div id="details-modal" class="modal-overlay">
+    <div class="modal-content glass">
+      <button id="details-modal-close" class="modal-close-btn">&times;</button>
+      <h3 id="details-modal-date"></h3>
+      <div id="day-details-content"></div>
+    </div>
+  </div>
+
   <!-- CSS-only confetti layer -->
   <div class="confetti-layer" aria-hidden="true">
-    <!-- 50 particles -->
     <div class="confetti c1"></div><div class="confetti c2"></div><div class="confetti c3"></div><div class="confetti c4"></div><div class="confetti c5"></div>
     <div class="confetti c6"></div><div class="confetti c7"></div><div class="confetti c8"></div><div class="confetti c9"></div><div class="confetti c10"></div>
     <div class="confetti c11"></div><div class="confetti c12"></div><div class="confetti c13"></div><div class="confetti c14"></div><div class="confetti c15"></div>
@@ -138,10 +448,387 @@
     <div class="confetti c26"></div><div class="confetti c27"></div><div class="confetti c28"></div><div class="confetti c29"></div><div class="confetti c30"></div>
     <div class="confetti c31"></div><div class="confetti c32"></div><div class="confetti c33"></div><div class="confetti c34"></div><div class="confetti c35"></div>
     <div class="confetti c36"></div><div class="confetti c37"></div><div class="confetti c38"></div><div class="confetti c39"></div><div class="confetti c40"></div>
-    <div class="confetti c41"></div><div class="confetti c42"></div><div class="confetti c43"></div><div class="confetti c44"></div><div class="confetti c45"></div>
-    <div class="confetti c46"></div><div class="confetti c47"></div><div class="confetti c48"></div><div class="confetti c49"></div><div class="confetti c50"></div>
   </div>
 
-  <script src="app.js"></script>
+<script>
+// Storage: key "dw-data" -> { entries: { "YYYY-MM-DD": { med: { time: seconds }, walk: { time: seconds } } } }
+
+const el = (id) => document.getElementById(id);
+const state = {
+  year: new Date().getFullYear(),
+  month: new Date().getMonth(),
+  data: loadData()
+};
+
+// --- Timer State ---
+const timerState = {
+  interval: null,
+  startTime: 0,
+  elapsedTime: 0,
+  isPaused: true,
+  activeType: null // 'med' or 'walk'
+};
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem('dw-data');
+    if (!raw) return { entries: {} };
+    const parsed = JSON.parse(raw);
+    // Migration for old data structure
+    if (parsed && parsed.entries) {
+      for (const k of Object.keys(parsed.entries)) {
+        const entry = parsed.entries[k];
+        delete entry.vit; // Remove vitamin data
+        if (typeof entry.med === 'boolean') entry.med = { time: entry.med ? 1 : 0 };
+        if (typeof entry.walk === 'boolean') entry.walk = { time: entry.walk ? 1 : 0 };
+        if (!entry.med) entry.med = { time: 0 };
+        if (!entry.walk) entry.walk = { time: 0 };
+      }
+    }
+    return parsed?.entries ? parsed : { entries: {} };
+  } catch {
+    return { entries: {} };
+  }
+}
+function saveData() { localStorage.setItem('dw-data', JSON.stringify(state.data)); }
+function ymd(dateObj){
+  return `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
+}
+function isAllComplete(entry){ return !!(entry?.med?.time > 0 && entry?.walk?.time > 0); }
+function formatTime(totalSeconds) {
+    if (totalSeconds <= 1 && totalSeconds > 0) return `Done`; // Handle migrated data
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+function formatTimeVerbose(totalSeconds) {
+    if (totalSeconds <= 1 && totalSeconds > 0) return `Completed`; // Handle migrated data
+    if (totalSeconds === 0) return `Not logged`;
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${m}m ${s}s`;
+}
+
+function logActivity(type, seconds) {
+  const today = ymd(new Date());
+  const existing = state.data.entries[today] ?? { med: { time: 0 }, walk: { time: 0 } };
+  const wasAll = isAllComplete(existing);
+
+  existing[type].time = (existing[type].time || 0) + seconds;
+  state.data.entries[today] = existing;
+  const nowAll = isAllComplete(existing);
+
+  saveData();
+  renderAll();
+  flashButton(type);
+  pulseStatus();
+
+  if (nowAll && !wasAll) {
+    triggerConfettiCSS();
+  }
+
+  maybeShowMilestone(type);
+}
+
+function resetToday() {
+  const today = ymd(new Date());
+  if (state.data.entries[today]) {
+    state.data.entries[today] = { med: { time: 0 }, walk: { time: 0 } };
+    saveData();
+    renderAll();
+  }
+}
+
+function monthLabel(y, m) { return new Date(y, m, 1).toLocaleString(undefined, { month:'long', year:'numeric' }); }
+
+function renderCalendar() {
+  const cal = el('calendar'); cal.innerHTML = '';
+  const y = state.year, m = state.month;
+  el('month-label').textContent = monthLabel(y, m);
+
+  const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  weekdays.forEach(w => {
+    const wEl = document.createElement('div');
+    wEl.className = 'weekday';
+    wEl.textContent = w;
+    cal.appendChild(wEl);
+  });
+
+  const first = new Date(y, m, 1);
+  const startIdx = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const todayStr = ymd(new Date());
+
+  for (let i=0;i<startIdx;i++){ cal.appendChild(document.createElement('div')); }
+
+  for (let d=1; d<=daysInMonth; d++){
+    const date = new Date(y, m, d);
+    const key = ymd(date);
+    const entry = state.data.entries[key];
+    const medDone = entry?.med?.time > 0;
+    const walkDone = entry?.walk?.time > 0;
+
+    const cell = document.createElement('div');
+    cell.className = 'day';
+    cell.addEventListener('click', () => showDayDetails(key));
+    if (key === todayStr) cell.classList.add('today');
+
+    if (medDone || walkDone) {
+      if (medDone && walkDone) cell.classList.add('tint-mix');
+      else if (medDone) cell.classList.add('tint-med');
+      else if (walkDone) cell.classList.add('tint-walk');
+      cell.classList.add('tint-animated');
+    }
+    
+    const num = document.createElement('div');
+    num.className = 'dnum';
+    num.textContent = d;
+
+    const badges = document.createElement('div');
+    badges.className = 'badges';
+    if (medDone) { const b = document.createElement('span'); b.className = 'badge med'; badges.appendChild(b); }
+    if (walkDone){ const b = document.createElement('span'); b.className = 'badge walk'; badges.appendChild(b); }
+    
+    cell.appendChild(num);
+    cell.appendChild(badges);
+    cal.appendChild(cell);
+  }
+}
+
+function getStats() {
+  let medMonth=0, walkMonth=0, medTotal=0, walkTotal=0;
+
+  for (const [key, val] of Object.entries(state.data.entries)) {
+    if (val.med?.time > 0) medTotal++;
+    if (val.walk?.time > 0) walkTotal++;
+
+    const dt = new Date(key);
+    if (dt.getFullYear() === state.year && dt.getMonth() === state.month) {
+      if (val.med?.time > 0) medMonth++;
+      if (val.walk?.time > 0) walkMonth++;
+    }
+  }
+  return { medMonth, walkMonth, medTotal, walkTotal };
+}
+
+function getStreak(type) {
+  let streak = 0;
+  const cur = new Date();
+  for (;;) {
+    const key = ymd(cur);
+    const v = state.data.entries[key];
+    if (v && v[type]?.time > 0) { streak++; cur.setDate(cur.getDate() - 1); }
+    else break;
+  }
+  return streak;
+}
+
+function renderToday() {
+  const today = ymd(new Date());
+  const entry = state.data.entries[today];
+  const medDone = entry?.med?.time > 0;
+  const walkDone = entry?.walk?.time > 0;
+
+  let msg = 'Make today count.';
+  if (medDone && walkDone) msg = 'Meditation and Walk done. Amazing!';
+  else if (medDone) msg = 'Meditation done. How about a walk?';
+  else if (walkDone) msg = 'Walk done. A short meditation will feel good.';
+  el('today-status').textContent = msg;
+
+  const medBtn = el('btn-meditation');
+  const walkBtn = el('btn-walk');
+
+  medBtn.classList.toggle('completed', medDone);
+  walkBtn.classList.toggle('completed', walkDone);
+  
+  medBtn.innerHTML = medDone ? `Meditation: ${formatTimeVerbose(entry.med.time)}<span class="sub">Completed</span>` : `Start Meditation<span class="sub">Tap to log time</span>`;
+  walkBtn.innerHTML = walkDone ? `Walk: ${formatTimeVerbose(entry.walk.time)}<span class="sub">Completed</span>` : `Start Walk<span class="sub">Tap to log time</span>`;
+
+  medBtn.setAttribute('aria-pressed', String(medDone));
+  walkBtn.setAttribute('aria-pressed', String(walkDone));
+}
+
+function renderStats() {
+  const s = getStats();
+  el('med-month').textContent = s.medMonth;
+  el('walk-month').textContent = s.walkMonth;
+  el('med-total').textContent = s.medTotal;
+  el('walk-total').textContent = s.walkTotal;
+
+  el('med-streak').textContent = getStreak('med');
+  el('walk-streak').textContent = getStreak('walk');
+}
+
+function flashButton(type){
+  const map = { med:'btn-meditation', walk:'btn-walk' };
+  el(map[type])?.animate(
+    [{ transform:'scale(1)' }, { transform:'scale(1.04)' }, { transform:'scale(1)' }],
+    { duration:260, easing:'ease-out' }
+  );
+}
+
+function pulseStatus(){
+  el('status-icon').classList.add('status-glow');
+  setTimeout(()=>el('status-icon').classList.remove('status-glow'), 600);
+}
+
+function triggerConfettiCSS(){
+  const layer = document.querySelector('.confetti-layer');
+  if (!layer) return;
+  layer.classList.remove('active');
+  void layer.offsetHeight;
+  layer.classList.add('active');
+  setTimeout(()=>layer.classList.remove('active'), 4000);
+}
+
+function maybeShowMilestone(type){
+  const streak = getStreak(type);
+  const thresholds = [7, 30, 100, 365];
+  if (thresholds.includes(streak)) {
+    const box = el('milestone');
+    const labels = { med:'Meditation', walk:'Walk' };
+    box.textContent = `${labels[type]} streak: ${streak} days! Keep the rhythm.`;
+    box.style.display = 'block';
+    setTimeout(()=> box.style.display='none', 4000);
+  }
+}
+
+function renderAll(){
+  el('today-date').textContent = new Date().toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long' });
+  renderToday();
+  renderCalendar();
+  renderStats();
+}
+
+function moveMonth(delta) {
+  let y = state.year;
+  let m = state.month + delta;
+  if (m < 0) { m = 11; y -= 1; }
+  if (m > 11){ m = 0;  y += 1; }
+  state.year = y; state.month = m;
+  renderCalendar();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state.data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'daily-tracker-data.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const obj = JSON.parse(reader.result);
+      if (obj && obj.entries && typeof obj.entries === 'object') {
+        state.data = obj; // Assume imported data is already in the new format
+        saveData();
+        renderAll();
+      } else { alert('Invalid JSON format.'); }
+    } catch { alert('Could not parse JSON.'); }
+  };
+  reader.readAsText(file);
+}
+
+// --- Timer Logic ---
+function openTimer(type) {
+  timerState.activeType = type;
+  timerState.elapsedTime = 0;
+  timerState.isPaused = true;
+  updateTimerDisplay();
+  el('timer-modal-title').textContent = type === 'med' ? 'Meditate' : 'Walk';
+  el('timer-start-pause').textContent = 'Start';
+  el('timer-modal').classList.add('visible');
+}
+
+function closeTimer() {
+  clearInterval(timerState.interval);
+  timerState.interval = null;
+  el('timer-modal').classList.remove('visible');
+}
+
+function updateTimerDisplay() {
+  const totalSeconds = Math.floor(timerState.elapsedTime / 1000);
+  el('timer-display').textContent = formatTime(totalSeconds);
+}
+
+function handleStartPause() {
+  const btn = el('timer-start-pause');
+  timerState.isPaused = !timerState.isPaused;
+  if (timerState.isPaused) {
+    clearInterval(timerState.interval);
+    timerState.interval = null;
+    btn.textContent = 'Resume';
+  } else {
+    timerState.startTime = Date.now() - timerState.elapsedTime;
+    timerState.interval = setInterval(() => {
+      timerState.elapsedTime = Date.now() - timerState.startTime;
+      updateTimerDisplay();
+    }, 1000);
+    btn.textContent = 'Pause';
+  }
+}
+
+function handleFinish() {
+  const totalSeconds = Math.round(timerState.elapsedTime / 1000);
+  if (totalSeconds > 0) {
+    logActivity(timerState.activeType, totalSeconds);
+  }
+  closeTimer();
+}
+
+// --- Day Details Modal ---
+function showDayDetails(dateKey) {
+  const entry = state.data.entries[dateKey];
+  const date = new Date(dateKey + 'T12:00:00'); // Use noon to avoid timezone issues
+  el('details-modal-date').textContent = date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const medTime = entry?.med?.time || 0;
+  const walkTime = entry?.walk?.time || 0;
+  el('day-details-content').innerHTML = `
+    <p>🧘‍♂️ Meditation: <strong>${formatTimeVerbose(medTime)}</strong></p>
+    <p>🚶‍♀️ Walk: <strong>${formatTimeVerbose(walkTime)}</strong></p>
+  `;
+  el('details-modal').classList.add('visible');
+}
+function closeDetailsModal() {
+  el('details-modal').classList.remove('visible');
+}
+
+function attachEvents(){
+  el('btn-meditation').addEventListener('click', () => openTimer('med'));
+  el('btn-walk').addEventListener('click', () => openTimer('walk'));
+  el('prev-month').addEventListener('click', () => moveMonth(-1));
+  el('next-month').addEventListener('click', () => moveMonth(1));
+  el('reset-day').addEventListener('click', resetToday);
+  el('export-data').addEventListener('click', exportData);
+  el('import-data').addEventListener('click', () => el('import-file').click());
+  el('import-file').addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (file) importData(file);
+    e.target.value = '';
+  });
+
+  // Timer modal events
+  el('timer-modal-close').addEventListener('click', closeTimer);
+  el('timer-start-pause').addEventListener('click', handleStartPause);
+  el('timer-finish').addEventListener('click', handleFinish);
+
+  // Details modal events
+  el('details-modal-close').addEventListener('click', closeDetailsModal);
+  el('details-modal').addEventListener('click', (e) => {
+    if (e.target === el('details-modal')) closeDetailsModal();
+  });
+}
+
+function init(){
+  attachEvents();
+  renderAll();
+}
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
 </body>
 </html>
